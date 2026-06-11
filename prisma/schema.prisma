@@ -1,0 +1,42 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../app/generated/prisma/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+model User {
+  id        String    @id @default(uuid())
+  pseudo    String?   @unique
+  email     String?   @unique
+  mdp       String?
+  image     String?   // <-- ajouté pour l'avatar
+  depense   Depense[]
+  votes     Vote[]
+  inscritLe DateTime  @default(now())
+}
+
+model Depense {
+  id       String   @id @default(uuid())
+  titre    String
+  prix     Float
+  category String
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes    Vote[]
+  creerLe  DateTime @default(now())
+}
+
+model Vote {
+  id        String  @id @default(uuid())
+  type      String  // "VALIDATED" ou "SHAMEFUL"
+  userId    String
+  depenseId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  depense   Depense @relation(fields: [depenseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, depenseId])
+}
