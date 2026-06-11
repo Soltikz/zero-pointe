@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import prisma from "@/lib/prisma"
-import { writeFile, mkdir } from "fs/promises"
-import { join } from "path"
+import { v2 as cloudinary } from "cloudinary"
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export async function POST(req: NextRequest) {
     try {
@@ -20,7 +25,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Fichier invalide" }, { status: 400 })
         }
 
-        // Limite 2Mo
         if (fichier.size > 2 * 1024 * 1024) {
             return NextResponse.json({ error: "Image trop lourde (max 2Mo)" }, { status: 400 })
         }
@@ -28,18 +32,16 @@ export async function POST(req: NextRequest) {
         const bytes = await fichier.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        // Nom unique basé sur l'email
-        const ext = fichier.name.split(".").pop() ?? "jpg"
-        const nomFichier = `${session.user.email.replace(/[^a-z0-9]/gi, "_")}.${ext}`
+        const base64 = `data:${fichier.type};base64,${buffer.toString("base64")}`
 
-        // Dossier public/avatars
-        const dossier = join(process.cwd(), "public", "avatars")
-        await mkdir(dossier, { recursive: true })
-        await writeFile(join(dossier, nomFichier), buffer)
+        const upload = await cloudinary.uploader.upload(base64, {
+            folder: "avatars",
+            public_id: session.user.email.replace(/[^a-z0-9]/gi, "_"),
+            overwrite: true,
+        })
 
-        const cheminImage = `/avatars/${nomFichier}`
+        const cheminImage = upload.secure_url
 
-        // Sauvegarder le chemin en BDD
         await prisma.user.update({
             where: { email: session.user.email },
             data: { image: cheminImage },
