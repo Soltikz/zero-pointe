@@ -54,7 +54,7 @@ export default function WelcomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl w-full mb-10 text-left">
           <div className="bg-[#111111] border border-white/8 rounded-2xl p-5">
             <div className="text-[#CA3C66] text-2xl font-black mb-2">01</div>
-            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-1.5">Tu craque</h3>
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-1.5">Tu craques</h3>
             <p className="text-zinc-500 text-xs leading-relaxed">
               Une dépense inutile, impulsive ou franchement honteuse. Tu la confesses sur le site.
             </p>
